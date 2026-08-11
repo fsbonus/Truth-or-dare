@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>真心话大冒险 · 双人版</title>
+<style>
+:root{
+  --bg:#111218; --panel:#1b1d27; --panel2:#242735; --text:#f7f7fb;
+  --muted:#aeb2c2; --accent:#ff6b8a; --accent2:#7c6cff; --good:#55d6a4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(124,108,255,.22), transparent 28%),
+    radial-gradient(circle at 85% 0%, rgba(255,107,138,.20), transparent 28%),
+    var(--bg);
+}
+.wrap{max-width:760px;margin:auto;padding:22px 16px 36px}
+h1{font-size:30px;margin:10px 0 4px}
+.sub{color:var(--muted);margin-bottom:20px}
+.card{
+  background:rgba(27,29,39,.92); border:1px solid rgba(255,255,255,.08);
+  border-radius:22px; padding:16px; margin:12px 0; box-shadow:0 18px 50px rgba(0,0,0,.22);
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;color:var(--muted);font-size:13px;margin-bottom:7px}
+input{
+  width:100%;padding:13px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.10);
+  background:var(--panel2); color:var(--text); font-size:16px;outline:none
+}
+.segment{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.segment.levels{grid-template-columns:repeat(5,1fr)}
+button{
+  appearance:none;border:0;border-radius:14px;padding:13px 10px;font-size:15px;font-weight:700;
+  color:var(--text);background:var(--panel2);cursor:pointer;transition:.15s transform,.15s background
+}
+button:active{transform:scale(.98)}
+button.active{background:linear-gradient(135deg,var(--accent2),var(--accent))}
+button.primary{
+  width:100%;font-size:18px;padding:16px;background:linear-gradient(135deg,var(--accent2),var(--accent));
+}
+button.secondary{width:100%;background:#303443}
+.levelnote{font-size:12px;color:var(--muted);margin-top:8px;min-height:18px}
+.result{
+  min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:26px 18px;
+}
+.badge{
+  display:inline-flex;gap:8px;align-items:center;padding:7px 11px;border-radius:999px;
+  background:rgba(255,255,255,.07);color:#dfe2ee;font-size:13px;margin-bottom:15px
+}
+.question{font-size:26px;line-height:1.45;font-weight:800;letter-spacing:.2px}
+.hint{margin-top:13px;color:var(--muted);font-size:13px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.footer{color:#777d90;font-size:12px;text-align:center;margin-top:18px;line-height:1.6}
+@media(max-width:520px){
+  h1{font-size:27px}.question{font-size:23px}.segment.levels{grid-template-columns:repeat(5,1fr)}
+  .segment.levels button{font-size:13px;padding:12px 4px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>真心话大冒险</h1>
+  <div class="sub">双人即玩版 · 5档亲密等级</div>
+
+  <div class="card">
+    <div class="row">
+      <div><label>玩家 A</label><input id="nameA" value="A"/></div>
+      <div><label>玩家 B</label><input id="nameB" value="B"/></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>当前回答方</label>
+    <div class="segment">
+      <button class="player active" data-player="A" id="btnA">A</button>
+      <button class="player" data-player="B" id="btnB">B</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>游戏类型</label>
+    <div class="segment">
+      <button class="mode active" data-mode="truth">真心话</button>
+      <button class="mode" data-mode="dare">大冒险</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>亲密等级</label>
+    <div class="segment levels">
+      <button class="level active" data-level="1">Lv.1</button>
+      <button class="level" data-level="2">Lv.2</button>
+      <button class="level" data-level="3">Lv.3</button>
+      <button class="level" data-level="4">Lv.4</button>
+      <button class="level" data-level="5">Lv.5</button>
+    </div>
+    <div class="levelnote" id="levelNote"></div>
+  </div>
+
+  <button class="primary" id="draw">随机抽题</button>
+
+  <div class="card result">
+    <div class="badge" id="badge">A · 真心话 · Lv.1</div>
+    <div class="question" id="question">点一下“随机抽题”开始。</div>
+    <div class="hint">不舒服的问题可以直接跳过，双方同意最重要。</div>
+  </div>
+
+  <div class="actions">
+    <button class="secondary" id="swap">换对方</button>
+    <button class="secondary" id="again">换一题</button>
+  </div>
+
+  <div class="footer">Lv.1 破冰 · Lv.2 熟悉 · Lv.3 暧昧 · Lv.4 亲密 · Lv.5 深度/刺激<br>题库为双人关系向，默认不过界、不强迫。</div>
+</div>
+
+<script>
+const bank = {
+truth:{
+1:[
+"你对我的第一印象是什么？","你最近一次因为我笑是什么时候？","你最喜欢我身上的一个小习惯是什么？",
+"如果今天只能和我做一件事，你会选什么？","你觉得我们两个人谁更容易嘴硬？","你觉得我最像哪一种动物？为什么？",
+"你有没有偷偷观察过我某个细节？","你觉得我最适合什么样的约会？"
+],
+2:[
+"你觉得我们变熟的关键瞬间是什么？","你最愿意和我分享、但不太会对别人说的事情是什么？",
+"你觉得我什么时候最有魅力？","你有没有因为我的一句话想很久？","如果让我改一个习惯，你希望是什么？",
+"你觉得我们最默契的一件事是什么？","你有没有期待过我主动联系你？","你最想和我一起去哪里待三天？"
+],
+3:[
+"你有没有某一刻觉得我对你来说有点特别？","如果有人问我们是什么关系，你最想怎么回答？",
+"你最喜欢我靠近你的哪种方式？","你有没有吃过我的醋？什么时候？","你觉得我们之间最暧昧的一次互动是什么？",
+"如果我突然牵你的手，你第一反应会是什么？","你最想听我对你说哪句话？","你觉得谁更容易先心动？"
+],
+4:[
+"你最想和我拥有哪一种只属于我们的习惯？","如果我们约会一整天，你会怎么安排？",
+"你有没有想象过和我更亲密一点的关系？","你觉得我最让你心动的瞬间是什么？","你最希望我在哪件事上更主动？",
+"如果现在必须说一句很真诚的话给我，你会说什么？","你觉得我们之间最大的吸引力来自哪里？","什么情况下你会很想抱我？"
+],
+5:[
+"你现在对我的真实感情，最接近哪三个词？","你最害怕我们之间发生什么变化？",
+"如果我们真的走得很近，你最担心的是什么？","你愿意让我知道你最脆弱的一面是什么吗？",
+"你有没有认真想过我们未来可能变成什么关系？","你最想从我这里获得哪一种安全感？",
+"如果今晚只能问我一个你一直不敢问的问题，你会问什么？","你对我们之间最深的期待是什么？"
+]},
+dare:{
+1:[
+"模仿对方最常做的一个动作10秒。","认真夸对方三个具体优点，不能重复。","和对方击掌并保持3秒。",
+"给对方起一个只在今晚使用的昵称。","用播音腔介绍对方20秒。","选一张你手机里觉得最适合代表今天心情的照片给对方看。",
+"和对方完成一个同步动作连续5次。","用一句话给对方写一个今日限定颁奖词。"
+],
+2:[
+"和对方对视15秒，谁先笑谁输。","让对方替你选一个新的聊天备注名，保留到游戏结束。",
+"互相说一句平时不会直接说的感谢。","两个人合拍一张尽量像情侣/搭档封面的照片。",
+"让对方随机翻你相册最近20张中的一张，你负责讲背后的故事。","靠近一点坐30秒，不许故意躲开。",
+"给对方发一条只有你们两个人看得懂的消息。","闭眼让对方用一句话描述你，你只能回答‘像’或‘不像’。"
+],
+3:[
+"和对方牵手20秒。","贴近对方耳边说一句你觉得很撩的话。","让对方选择：拥抱10秒，或对视30秒。",
+"用最认真的语气说一句‘如果我追你……’开头的话。","让对方给你拍一张他/她觉得你最好看的照片。",
+"面对面坐近一点，各说一个对方让自己心动的瞬间。","把手掌贴在一起10秒，不能笑场。","让对方决定你下一条朋友圈/备忘录写一句什么话，可不公开。"
+],
+4:[
+"给对方一个至少10秒的拥抱。","靠在对方肩上30秒。","两个人额头轻轻碰一下，保持5秒。",
+"对着对方说一句你平时绝不会轻易说出口的暧昧台词。","让对方选择你们下一次单独约会的一个项目，你当场答应或使用一次跳过权。",
+"闭眼握住对方的手，由对方问你一个只能诚实回答的问题。","坐到彼此更近的位置直到下一轮结束。","用一句话描述：如果现在这一刻出现在电影里，会是什么场景？"
+],
+5:[
+"在双方都愿意的前提下，完成一个20秒的拥抱。","距离对方很近，对视20秒，然后各说一句真实感受。",
+"让对方指定一个你可以接受的亲密动作；任何一方不舒服就立刻换题。","说出一句你最想在关系更进一步时对对方说的话。",
+"把手机放下，两个人安静牵手一分钟。","互相说出一个‘我希望以后我们可以……’。",
+"让对方问一个一直想确认的关系问题，你必须认真回答。","选择拥抱、牵手或靠肩其中一项，保持到下一题抽出。"
+]}
+};
+
+const notes={
+1:"轻松破冰，不涉及明显暧昧。",
+2:"开始聊真实感受和彼此观察。",
+3:"明显暧昧，适合关系升温。",
+4:"较高亲密度，加入肢体互动与关系表达。",
+5:"深度情绪与高亲密互动；任何一方不舒服都可直接跳过。"
+};
+
+let player="A", mode="truth", level=1, last=null;
+const $=s=>document.querySelector(s);
+function names(){
+  return {A:$("#nameA").value.trim()||"A",B:$("#nameB").value.trim()||"B"};
+}
+function sync(){
+  const n=names();
+  $("#btnA").textContent=n.A; $("#btnB").textContent=n.B;
+  document.querySelectorAll(".player").forEach(x=>x.classList.toggle("active",x.dataset.player===player));
+  document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x.dataset.mode===mode));
+  document.querySelectorAll(".level").forEach(x=>x.classList.toggle("active",Number(x.dataset.level)===level));
+  $("#levelNote").textContent=notes[level];
+  $("#badge").textContent=`${n[player]} · ${mode==="truth"?"真心话":"大冒险"} · Lv.${level}`;
+}
+function draw(){
+  const arr=bank[mode][level];
+  let q;
+  do{q=arr[Math.floor(Math.random()*arr.length)]}while(arr.length>1&&q===last);
+  last=q;
+  $("#question").textContent=q;
+  sync();
+}
+document.querySelectorAll(".player").forEach(b=>b.onclick=()=>{player=b.dataset.player;sync()});
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;last=null;sync()});
+document.querySelectorAll(".level").forEach(b=>b.onclick=()=>{level=Number(b.dataset.level);last=null;sync()});
+$("#draw").onclick=draw; $("#again").onclick=draw;
+$("#swap").onclick=()=>{player=player==="A"?"B":"A";sync()};
+$("#nameA").oninput=sync; $("#nameB").oninput=sync;
+sync();
+</script>
+</body>
+</html>
